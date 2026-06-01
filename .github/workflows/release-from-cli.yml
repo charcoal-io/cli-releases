@@ -44,7 +44,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CLI_REPO_PAT }}
         run: |
           VERSION="${{ github.event.client_payload.version }}"
-          TAG="v${VERSION}"
+          TAG="${VERSION}"
           if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "tag=$TAG" >> "$GITHUB_OUTPUT"
@@ -58,7 +58,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.check_tag.outputs.tag }}
-          name: charcoal-cli-v${{ github.event.client_payload.version }}
+          name: charcoal-cli-${{ github.event.client_payload.version }}
           body_path: /tmp/changelog/changelog_entry.md
           draft: false
           prerelease: false
