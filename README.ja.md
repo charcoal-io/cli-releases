@@ -7,7 +7,8 @@
 ## インストール
 
 ```bash
-pip install https://github.com/charcoal-io/cli-releases/releases/download/v<VERSION>/charcoal_cli-<VERSION>-py3-none-any.whl
+pip install https://github.com/charcoal-io/cli-releases/releases/download/v<VERSION>/
+charcoal_cli-<VERSION>-py3-none-any.whl
 ```
 
 または、[リリースページ](https://github.com/charcoal-io/cli-releases/releases)からアーカイブをダウンロードして手動でインストールします。
