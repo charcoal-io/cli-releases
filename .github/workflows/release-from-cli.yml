@@ -1,0 +1,67 @@
+name: charcoal-cli release
+
+on:
+  repository_dispatch:
+    types: [cli-release]
+
+permissions:
+  contents: write
+
+env:
+  CLI_REPO: charcoal-io/cli
+  RELEASES_REPO: charcoal-io/cli-releases
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts from cli repo
+        env:
+          GH_TOKEN: ${{ secrets.CLI_REPO_PAT }}
+        run: |
+          gh run download "${{ github.event.client_payload.run_id }}" \
+            --repo "${{ env.CLI_REPO }}" \
+            --name dist \
+            --dir dist
+
+          gh run download "${{ github.event.client_payload.run_id }}" \
+            --repo "${{ env.CLI_REPO }}" \
+            --name changelog \
+            --dir /tmp/changelog
+
+      - name: Verify artifacts
+        run: |
+          echo "=== dist contents ==="
+          ls -la dist/
+          echo "=== changelog contents ==="
+          cat /tmp/changelog/changelog_entry.md
+
+      - name: Check for existing tag
+        id: check_tag
+        env:
+          GH_TOKEN: ${{ secrets.CLI_REPO_PAT }}
+        run: |
+          VERSION="${{ github.event.client_payload.version }}"
+          TAG="v${VERSION}"
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Release
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.check_tag.outputs.tag }}
+          name: charcoal-cli-v${{ github.event.client_payload.version }}
+          body_path: /tmp/changelog/changelog_entry.md
+          draft: false
+          prerelease: false
+          files: |
+            dist/*.tar.gz
+            dist/*.whl
